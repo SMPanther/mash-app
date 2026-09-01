@@ -8,6 +8,47 @@ create table profiles (
   created_at timestamptz default now()
 );
 
+-- ============================================================
+-- is_admin(): the single place "am I an admin?" is answered.
+--
+-- Every "admins can do X" policy below calls this instead of inlining
+-- `exists (select 1 from profiles where id = auth.uid() and role = 'admin')`.
+-- That inline version looks harmless but is NOT — the moment a policy on
+-- profiles itself (or anything profiles' own policies depend on) needs to
+-- check "is this user an admin", it triggers profiles' RLS to evaluate,
+-- which runs the same admin-check subquery again, which triggers RLS
+-- again — Postgres calls this "infinite recursion detected in policy for
+-- relation profiles" and every query against profiles just fails outright.
+-- SECURITY DEFINER makes this function run with the privileges of
+-- whoever created it, bypassing RLS internally for this one lookup, so
+-- the recursion never starts. This is the exact class of bug noted from
+-- [[andaaz-store]]'s earlier RLS debugging — worth not repeating here.
+-- ============================================================
+create or replace function public.is_admin()
+returns boolean as $$
+  select exists (
+    select 1 from public.profiles where id = auth.uid() and role = 'admin'
+  );
+$$ language sql security definer stable set search_path = public;
+
+alter table profiles enable row level security;
+
+create policy "users read own profile" on profiles
+  for select using (id = auth.uid());
+
+create policy "admins read all profiles" on profiles
+  for select using (public.is_admin());
+
+-- Deliberately NO update policy for ordinary users here: profiles.role is
+-- what the entire admin/rider/customer split is built on, and RLS is
+-- row-level, not column-level — an update policy that let a customer edit
+-- their own row would also let them set their own role to 'admin'. Name/
+-- phone edits go through an admin-managed path (or a future dedicated
+-- endpoint that updates only those two columns) rather than a raw table
+-- update policy, until that's actually needed.
+create policy "admins manage all profiles" on profiles
+  for all using (public.is_admin());
+
 create table menu_categories (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -86,55 +127,68 @@ alter table orders enable row level security;
 alter table complaints enable row level security;
 alter table menu_items enable row level security;
 alter table menu_categories enable row level security;
+alter table order_items enable row level security;
+alter table order_status_history enable row level security;
 
 create policy "customers read own orders" on orders
   for select using (customer_id = auth.uid());
 
 create policy "admins read all orders" on orders
-  for select using (
-    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-  );
+  for select using (public.is_admin());
 
 create policy "riders read assigned orders" on orders
   for select using (rider_id = auth.uid());
 
 create policy "admin updates status" on orders
-  for update using (
-    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-  );
+  for update using (public.is_admin());
 
 create policy "rider marks delivered" on orders
   for update using (rider_id = auth.uid())
   with check (status = 'delivered');
 
+create policy "customers create own orders" on orders
+  for insert with check (customer_id = auth.uid());
+
+-- order_items: readable by whoever can read the parent order (customer,
+-- admin, or the assigned rider) — expressed as "does a visible order with
+-- this id exist for me", which composes with the orders policies above
+-- rather than duplicating the role logic here.
+create policy "read order items via visible order" on order_items
+  for select using (
+    exists (select 1 from orders where orders.id = order_items.order_id)
+  );
+
+create policy "customers create own order items" on order_items
+  for insert with check (
+    exists (select 1 from orders where orders.id = order_items.order_id and orders.customer_id = auth.uid())
+  );
+
+-- order_status_history: admin-only read for now (audit trail) — nothing
+-- in the app queries this directly yet, but RLS defaults to deny-all once
+-- enabled, so this is here to avoid silently blocking a future audit view.
+create policy "admins read order status history" on order_status_history
+  for select using (public.is_admin());
+
 create policy "customers read own complaints" on complaints
   for select using (customer_id = auth.uid());
 
 create policy "admins read all complaints" on complaints
-  for select using (
-    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-  );
+  for select using (public.is_admin());
 
 create policy "customers create complaints" on complaints
   for insert with check (customer_id = auth.uid());
 
 create policy "admins update complaints" on complaints
-  for update using (
-    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-  );
+  for update using (public.is_admin());
 
 create policy "public reads menu" on menu_items for select using (true);
 create policy "public reads categories" on menu_categories for select using (true);
 
 create policy "admins write menu items" on menu_items
-  for all using (
-    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-  );
+  for all using (public.is_admin());
 
 create policy "admins write categories" on menu_categories
-  for all using (
-    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-  );
+  for all using (public.is_admin());
 
 -- ============================================================
 -- Phase 2: variations, combos/meals, coupons, rider location
@@ -161,6 +215,15 @@ create table combo_items (
   component_variation_id uuid references menu_item_variations(id),
   quantity int not null default 1
 );
+
+alter table menu_item_variations enable row level security;
+alter table combo_items enable row level security;
+
+create policy "public reads variations" on menu_item_variations for select using (true);
+create policy "admins write variations" on menu_item_variations for all using (public.is_admin());
+
+create policy "public reads combo items" on combo_items for select using (true);
+create policy "admins write combo items" on combo_items for all using (public.is_admin());
 
 -- order_items needs to record which variation was chosen (nullable —
 -- not every item has variations) at time of order.
@@ -190,9 +253,7 @@ create policy "customers read own coupons" on coupons
   for select using (customer_id = auth.uid());
 
 create policy "admins manage coupons" on coupons
-  for all using (
-    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-  );
+  for all using (public.is_admin());
 
 -- Rider live location — only written by the rider themselves, read by
 -- admin and by the customer for their own assigned order (join through
@@ -212,9 +273,7 @@ create policy "rider writes own location" on rider_locations
   with check (rider_id = auth.uid());
 
 create policy "admins read all rider locations" on rider_locations
-  for select using (
-    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-  );
+  for select using (public.is_admin());
 
 create policy "customers read assigned rider location" on rider_locations
   for select using (
@@ -231,20 +290,6 @@ create policy "customers read assigned rider location" on rider_locations
 alter table complaints add column resolution_action text
   check (resolution_action in ('contacted_rider', 'redelivered_free', 'discount_issued', 'apology_only', 'other'));
 alter table complaints add column issued_coupon_id uuid references coupons(id);
-
--- Defense-in-depth: the primary checkout path is app/api/checkout/route.js,
--- which uses the service-role key and bypasses RLS after doing its own
--- server-side validation. These policies exist so a customer-authenticated
--- client can also insert their own orders directly if ever needed (e.g. an
--- admin manually placing a phone order on a customer's behalf, or a future
--- direct-insert flow) without that path having to reinvent security.
-create policy "customers create own orders" on orders
-  for insert with check (customer_id = auth.uid());
-
-create policy "customers create own order items" on order_items
-  for insert with check (
-    exists (select 1 from orders where orders.id = order_items.order_id and orders.customer_id = auth.uid())
-  );
 
 -- ============================================================
 -- Auto-create a profiles row on signup.
