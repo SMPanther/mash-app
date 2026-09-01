@@ -245,3 +245,24 @@ create policy "customers create own order items" on order_items
   for insert with check (
     exists (select 1 from orders where orders.id = order_items.order_id and orders.customer_id = auth.uid())
   );
+
+-- ============================================================
+-- Auto-create a profiles row on signup.
+-- Without this, every new auth.users signup has NO matching profiles
+-- row, so the login redirect (which reads profiles.role) has nothing
+-- to read — this is what you need for admin/rider test accounts to
+-- work at all. Defaults everyone to 'customer'; promote specific users
+-- to 'admin'/'rider' manually afterward (see the setup notes).
+-- ============================================================
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, role)
+  values (new.id, 'customer');
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
