@@ -16,3 +16,18 @@ body {
   background: var(--paper);
   color: var(--char);
 }
+
+/* Subtle floating motion for menu/hero imagery — see components/MenuItemsPanel.jsx
+   and HeroSpotlight.jsx. Kept gentle (8px, slow) per the "premium not
+   cheesy" note in the wheel brief; respects reduced-motion below. */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useParams } from "next/navigation";
 import { useRealtimeOrders } from "@/lib/useRealtimeOrders";
 import OrderStatusStepper from "@/components/OrderStatusStepper";
 import DeliveryMap from "@/components/DeliveryMap";
@@ -7,8 +8,9 @@ import DeliveryMap from "@/components/DeliveryMap";
 // The live view a customer lands on right after checkout. Subscribed to
 // just this one order — when the admin or rider changes its status, this
 // updates with no refresh, and the stepper animates the new current step.
-export default function OrderConfirmation({ params }) {
-  const orders = useRealtimeOrders({ orderId: params.id });
+export default function OrderConfirmation() {
+  const { id } = useParams();
+  const orders = useRealtimeOrders({ orderId: id });
   const order = orders[0];
 
   if (!order) return <p className="text-smoke p-6">Loading your order…</p>;

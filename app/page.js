@@ -2,19 +2,10 @@
 
 import { useState } from "react";
 import { useCart } from "@/lib/CartContext";
+import { CATEGORIES } from "@/lib/categories";
 
 // Single-location restaurant — no /locations list. A "Visit us" line
 // (address + hours) covers what a locations page would otherwise need.
-const CATEGORIES = [
-  { name: "Burgers", slug: "burgers", img: "/assets/category/burgers.png" },
-  { name: "Ramen", slug: "ramen", img: "/assets/category/ramen.png" },
-  { name: "Pizzas", slug: "pizzas", img: "/assets/category/pizzas.png" },
-  { name: "BBQ & Grills", slug: "bbq-grills", img: "/assets/category/bbq-grills.png" },
-  { name: "Pakistani cuisine", slug: "pakistani-cuisine", img: "/assets/category/pakistani-cuisine.png" },
-  { name: "Desserts", slug: "desserts", img: "/assets/category/desserts.png" },
-  { name: "Drinks", slug: "drinks", img: "/assets/category/drinks.png" },
-  { name: "Deals & combos", slug: "deals-combos", img: "/assets/category/deals-combos.png" },
-];
 
 export default function Home() {
   const [navOpen, setNavOpen] = useState(false);
@@ -97,23 +88,31 @@ export default function Home() {
         mashed into one menu.
       </p>
 
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-8 gap-2 sm:gap-3">
-        {CATEGORIES.map((cat) => (
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-8 gap-3 sm:gap-4">
+        {CATEGORIES.map((cat, i) => (
           <a
             key={cat.slug}
-            href={`/menu/${cat.slug}`}
-            className="flex flex-col items-center gap-1.5 sm:gap-2 text-center"
+            href={`/menu?category=${cat.slug}`}
+            className="flex flex-col items-center gap-2 text-center"
             data-cursor-hover
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={cat.img} alt="" className="w-14 h-14 sm:w-20 sm:h-20 object-contain" />
+            <div style={{ animation: `float 4.5s ease-in-out ${(i % 4) * 0.35}s infinite` }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={cat.icon}
+                alt=""
+                className="w-16 h-16 sm:w-24 sm:h-24 object-contain"
+                style={{ filter: "drop-shadow(0 8px 12px rgba(0,0,0,0.12))" }}
+              />
+            </div>
             <span className="text-[11px] sm:text-sm text-char leading-tight">{cat.name}</span>
           </a>
         ))}
       </div>
 
       {/* TODO: signature dish spotlight, story strip — see
-          01-project-study.md §2/§4 layout concept */}
+          01-project-study.md §2/§4 layout concept. The richer spotlight +
+          browsing experience now lives on /menu itself (wheel + hero). */}
     </main>
   );
 }

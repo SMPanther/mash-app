@@ -311,3 +311,32 @@ $$ language plpgsql security definer set search_path = public;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- ============================================================
+-- Phase 3: signup wiring + hero spotlight
+-- ============================================================
+
+-- profiles.email didn't exist before, but app/admin/coupons/page.js has
+-- always looked customers up by email — that lookup was silently
+-- returning nothing until now. Populated by the signup trigger below.
+alter table profiles add column if not exists email text;
+
+-- Re-create the signup trigger to also capture name (from the signup
+-- form's metadata) and email, not just default to role='customer'.
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, role, name, email)
+  values (new.id, 'customer', new.raw_user_meta_data->>'name', new.email);
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+-- (trigger itself already exists from earlier in this file and doesn't
+-- need re-creating — only the function body changed.)
+
+-- One dish can be flagged as the homepage/menu hero spotlight (the "MASH
+-- SPECIAL" feature slot). Only one should be true at a time in practice;
+-- enforced by the admin UI unsetting the previous one, not a DB constraint,
+-- since "exactly one, except zero during setup" isn't a clean check
+-- constraint to write.
+alter table menu_items add column if not exists featured boolean default false;

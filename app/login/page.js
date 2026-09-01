@@ -67,6 +67,12 @@ export default function LoginPage() {
         <button type="submit" className="w-full bg-chili text-paper rounded-full py-2 font-medium">
           Log in
         </button>
+        <p className="text-sm text-smoke text-center mt-4">
+          Don't have an account?{" "}
+          <a href="/signup" className="text-chili">
+            Sign up
+          </a>
+        </p>
       </form>
     </main>
   );

@@ -1,10 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabaseClient";
 import OrderStatusStepper from "@/components/OrderStatusStepper";
 
-export default function AdminOrderDetail({ params }) {
+// Client components use the useParams() hook rather than the `params`
+// prop — in Next.js 15, `params` became a Promise (for Server Components
+// that need to await it), and this hook sidesteps that entirely rather
+// than needing React.use() to unwrap it.
+export default function AdminOrderDetail() {
+  const { id } = useParams();
   const [order, setOrder] = useState(null);
   const [items, setItems] = useState([]);
 
@@ -13,15 +19,15 @@ export default function AdminOrderDetail({ params }) {
     supabase
       .from("orders")
       .select("*")
-      .eq("id", params.id)
+      .eq("id", id)
       .single()
       .then(({ data }) => setOrder(data));
     supabase
       .from("order_items")
       .select("*, menu_items(name)")
-      .eq("order_id", params.id)
+      .eq("order_id", id)
       .then(({ data }) => setItems(data || []));
-  }, [params.id]);
+  }, [id]);
 
   if (!order) return <p className="text-smoke">Loading order…</p>;
 
