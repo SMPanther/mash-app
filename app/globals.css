@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #191512;
+  --paper: #f1ece1;
+  --chili: #ff4b2b;
+  --ember: #e2812b;
+  --lime: #c4f135;
+  --char: #26201b;
+  --smoke: #8a8178;
+}
+
+body {
+  background: var(--paper);
+  color: var(--char);
+}
