@@ -31,6 +31,10 @@ export default function Home() {
           <a href="/menu">Menu</a>
           <a href="#about">About</a>
           <a href="#visit">Visit us</a>
+          <a href="/login" data-cursor-hover>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/icons/profile.png" alt="Account" className="w-6 h-6" />
+          </a>
           <a href="/order" className="relative" data-cursor-hover>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/assets/icons/cart.png" alt="Cart" className="w-6 h-6" />
@@ -75,6 +79,7 @@ export default function Home() {
           <a href="/menu" onClick={() => setNavOpen(false)}>Menu</a>
           <a href="#about" onClick={() => setNavOpen(false)}>About</a>
           <a href="#visit" onClick={() => setNavOpen(false)}>Visit us</a>
+          <a href="/login" onClick={() => setNavOpen(false)}>Log in</a>
           <a
             href="/order"
             className="bg-chili text-paper rounded-full px-5 py-2.5 text-sm font-medium text-center"
