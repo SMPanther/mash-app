@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
+import { useAuthUser } from "@/lib/useAuthUser";
 import { CATEGORIES } from "@/lib/categories";
 
 // Single-location restaurant — no /locations list. A "Visit us" line
@@ -10,6 +12,13 @@ import { CATEGORIES } from "@/lib/categories";
 export default function Home() {
   const [navOpen, setNavOpen] = useState(false);
   const { itemCount } = useCart();
+  const { user, logout } = useAuthUser();
+  const router = useRouter();
+
+  async function handleLogout() {
+    await logout();
+    router.refresh();
+  }
 
   return (
     <main className="px-[6vw] sm:px-[8vw] py-8 sm:py-[8vh] relative overflow-hidden">
@@ -34,10 +43,15 @@ export default function Home() {
           <a href="/menu">Menu</a>
           <a href="#about">About</a>
           <a href="#visit">Visit us</a>
-          <a href="/login" data-cursor-hover>
+          <a href={user ? "/account/profile" : "/login"} data-cursor-hover>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/assets/icons/profile.png" alt="Account" className="w-6 h-6" />
           </a>
+          {user && (
+            <button onClick={handleLogout} data-cursor-hover className="text-xs text-smoke">
+              Log out
+            </button>
+          )}
           <a href="/order" className="relative" data-cursor-hover>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/assets/icons/cart.png" alt="Cart" className="w-6 h-6" />
@@ -82,7 +96,22 @@ export default function Home() {
           <a href="/menu" onClick={() => setNavOpen(false)}>Menu</a>
           <a href="#about" onClick={() => setNavOpen(false)}>About</a>
           <a href="#visit" onClick={() => setNavOpen(false)}>Visit us</a>
-          <a href="/login" onClick={() => setNavOpen(false)}>Log in</a>
+          {user ? (
+            <>
+              <a href="/account/profile" onClick={() => setNavOpen(false)}>Profile</a>
+              <button
+                onClick={() => {
+                  setNavOpen(false);
+                  handleLogout();
+                }}
+                className="text-left text-smoke"
+              >
+                Log out
+              </button>
+            </>
+          ) : (
+            <a href="/login" onClick={() => setNavOpen(false)}>Log in</a>
+          )}
           <a
             href="/order"
             className="bg-chili text-paper rounded-full px-5 py-2.5 text-sm font-medium text-center"

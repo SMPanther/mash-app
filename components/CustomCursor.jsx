@@ -92,13 +92,13 @@ export default function CustomCursor() {
   return (
     <div ref={layerRef} className="fixed inset-0 pointer-events-none z-[2000] hidden md:block">
       <svg className="fixed inset-0 w-full h-full overflow-visible">
-        <path ref={pathRef} fill="none" stroke="var(--paper, #F1ECE1)" strokeWidth="2" opacity="0.9" />
+        <path ref={pathRef} fill="none" stroke="var(--char, #26201B)" strokeWidth="2" opacity="0.35" />
       </svg>
       {CHIPS.map((chip, i) => (
         <div
           key={i}
           ref={(el) => (chipRefs.current[i] = el)}
-          className="fixed top-0 left-0 rounded-full bg-paper shadow-md overflow-hidden cursor-chip transition-transform duration-150"
+          className="fixed top-0 left-0 rounded-full bg-white border-2 border-chili/40 shadow-lg overflow-hidden cursor-chip transition-transform duration-150"
           style={{ width: chip.size, height: chip.size }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}

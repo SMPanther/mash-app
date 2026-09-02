@@ -94,6 +94,9 @@ export default function ComboBuilder() {
 
   return (
     <div className="max-w-2xl">
+      <a href="/admin/menu" className="text-sm text-smoke mb-4 inline-block">
+        ← Back to menu
+      </a>
       <h1 className="text-2xl font-medium text-char mb-6">Build a combo / meal</h1>
 
       <div className="border border-smoke/30 rounded-lg p-4 mb-6 flex gap-2 flex-wrap">

@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabaseClient";
 import { useCart } from "@/lib/CartContext";
+import { useAuthUser } from "@/lib/useAuthUser";
 
 // Every customer-facing page outside the homepage (checkout, order
 // history, coupons, login, signup, order confirmation) had NO shared
@@ -13,20 +12,10 @@ import { useCart } from "@/lib/CartContext";
 export default function SiteHeader() {
   const { itemCount } = useCart();
   const router = useRouter();
-  const [user, setUser] = useState(undefined); // undefined = not checked yet
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUser(data.user || null));
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
-    });
-    return () => sub.subscription.unsubscribe();
-  }, []);
+  const { user, logout } = useAuthUser();
 
   async function handleLogout() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await logout();
     router.push("/");
     router.refresh();
   }

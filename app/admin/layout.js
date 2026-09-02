@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import AdminHeader from "@/components/AdminHeader";
 
 // Re-checks role server-side on every request to this section — RLS on the
 // database is the real security boundary, but this stops a customer who
@@ -24,15 +25,7 @@ export default async function AdminLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-paper">
-      <header className="border-b border-smoke/20 px-4 sm:px-6 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-3">
-        <span className="font-display text-lg sm:text-xl text-char">MASH admin</span>
-        <nav className="flex gap-3 sm:gap-4 text-xs sm:text-sm text-char flex-wrap">
-          <a href="/admin">Orders</a>
-          <a href="/admin/complaints">Complaints</a>
-          <a href="/admin/menu">Menu</a>
-          <a href="/admin/coupons">Coupons</a>
-        </nav>
-      </header>
+      <AdminHeader />
       <main className="p-4 sm:p-6">{children}</main>
     </div>
   );

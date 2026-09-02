@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import RiderHeader from "@/components/RiderHeader";
 
 export default async function RiderLayout({ children }) {
   const cookieStore = cookies();
@@ -20,10 +21,8 @@ export default async function RiderLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-paper">
-      <header className="border-b border-smoke/20 px-6 py-4">
-        <span className="font-display text-xl text-char">MASH rider</span>
-      </header>
-      <main className="p-6">{children}</main>
+      <RiderHeader />
+      <main className="p-4 sm:p-6">{children}</main>
     </div>
   );
 }

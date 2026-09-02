@@ -52,7 +52,11 @@ export default function AdminOrderBoard() {
       </div>
 
       <div className="space-y-3">
-        {activeOrders.length === 0 && <p className="text-smoke">No active orders right now.</p>}
+        {activeOrders.length === 0 && (
+          <div className="text-center py-16 border border-dashed border-smoke/25 rounded-xl">
+            <p className="text-smoke">No active orders right now.</p>
+          </div>
+        )}
         {activeOrders.map((order) => (
           <OrderCard
             key={order.id}

@@ -146,11 +146,12 @@ export default function CategoryWheel({ categories, activeIndex, onActiveChange 
       className="relative h-full w-full overflow-hidden select-none"
       style={{ perspective: "1000px", perspectiveOrigin: "50% 50%" }}
     >
-      {/* Focus-zone: a soft highlighted pill behind the active category,
-          rather than plain lines — reads more like "this is the selected
-          one" and less like a technical crosshair. */}
+      {/* Focus-zone: a soft highlighted pill behind the active category —
+          MUST render behind the cylinder (lower z-index), not in front of
+          it. This was inverted before and completely covered the active
+          item with an opaque white box. */}
       <div
-        className="absolute left-[2%] w-[96%] pointer-events-none z-10 rounded-2xl bg-white border border-chili/30"
+        className="absolute left-[2%] w-[96%] pointer-events-none z-0 rounded-2xl bg-white border border-chili/30"
         style={{ top: "50%", height: 80, transform: "translateY(-50%)", boxShadow: "0 4px 16px rgba(0,0,0,0.06)" }}
       />
       {/* Top/bottom edge fade — items ease out of view instead of clipping abruptly */}
@@ -164,7 +165,7 @@ export default function CategoryWheel({ categories, activeIndex, onActiveChange 
       />
       <div
         ref={cylinderRef}
-        className="absolute inset-0"
+        className="absolute inset-0 z-10"
         style={{ transformStyle: "preserve-3d", willChange: "transform" }}
       >
         {categories.map((cat, index) => (

@@ -55,12 +55,23 @@ export default function RiderDashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-medium text-char mb-4">Your deliveries</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-medium text-char">Your deliveries</h1>
+        {assigned.length > 0 && (
+          <span className="text-xs bg-chili/10 text-chili px-2.5 py-1 rounded-full font-medium">
+            {assigned.length} active
+          </span>
+        )}
+      </div>
       {assigned.length > 0 && (
         <p className="text-xs text-smoke mb-4">📍 Sharing your location while you have an active delivery.</p>
       )}
       <div className="space-y-3">
-        {assigned.length === 0 && <p className="text-smoke">Nothing assigned right now.</p>}
+        {assigned.length === 0 && (
+          <div className="text-center py-16 border border-dashed border-smoke/25 rounded-xl">
+            <p className="text-smoke">Nothing assigned right now — check back shortly.</p>
+          </div>
+        )}
         {assigned.map((order) => (
           <OrderCard
             key={order.id}
