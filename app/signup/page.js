@@ -37,7 +37,9 @@ export default function SignupPage() {
 
     if (data.session) {
       // Email confirmation is off for this project — signed in immediately.
-      router.push("/");
+      // Send them to fill in contact/address once, rather than dropping
+      // them on the homepage with an incomplete profile.
+      router.push("/account/profile?onboarding=true");
     } else {
       // Supabase Auth has "Confirm email" turned on — no session until
       // they click the link. Don't pretend they're logged in.
@@ -64,6 +66,9 @@ export default function SignupPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-paper px-6">
       <form onSubmit={handleSubmit} className="w-full max-w-sm">
+        <a href="/" className="block mb-6 text-sm text-smoke" data-cursor-hover>
+          ← Back to MASH
+        </a>
         <h1 className="font-display text-3xl text-char mb-6">Create your account</h1>
         <input
           placeholder="Name"

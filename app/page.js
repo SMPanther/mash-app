@@ -12,8 +12,20 @@ export default function Home() {
   const { itemCount } = useCart();
 
   return (
-    <main className="px-[6vw] sm:px-[8vw] py-8 sm:py-[8vh]">
-      <header className="flex items-center justify-between mb-16 sm:mb-24">
+    <main className="px-[6vw] sm:px-[8vw] py-8 sm:py-[8vh] relative overflow-hidden">
+      {/* decorative corner cluster — purely visual, hidden from screen readers */}
+      <div className="hidden sm:block absolute -top-2 -left-6 opacity-70 pointer-events-none" aria-hidden="true">
+        <div className="relative w-40 h-24">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/assets/category/bbq-grills.png" alt="" className="absolute w-16 h-16 top-0 left-0 -rotate-12" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/assets/category/desserts.png" alt="" className="absolute w-14 h-14 top-4 left-14 rotate-6" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/assets/category/drinks.png" alt="" className="absolute w-12 h-12 top-10 left-28 -rotate-6" />
+        </div>
+      </div>
+
+      <header className="flex items-center justify-between mb-16 sm:mb-24 relative z-10">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/assets/logo/mash-logo.png" alt="MASH" className="h-9 sm:h-11 w-auto" />
 
@@ -80,20 +92,38 @@ export default function Home() {
         </nav>
       )}
 
-      <h1 className="font-display text-[clamp(2.25rem,9vw,5.5rem)] leading-[0.95] max-w-[16ch] mb-5 sm:mb-6">
-        MIX. MASH. EAT.
-      </h1>
-      <p className="text-smoke max-w-[40ch] text-sm sm:text-base mb-10 sm:mb-12">
-        One kitchen, every cuisine you're craving. Burgers, ramen, pizza, BBQ, Pakistani classics —
-        mashed into one menu.
-      </p>
+      <div className="flex flex-col sm:flex-row items-center gap-8 sm:gap-4">
+        <div className="flex-1">
+          <h1 className="font-display text-[clamp(2.25rem,9vw,5.5rem)] leading-[0.95] max-w-[16ch] mb-5 sm:mb-6">
+            MIX. MASH. EAT.
+          </h1>
+          <p className="text-smoke max-w-[40ch] text-sm sm:text-base mb-8">
+            One kitchen, every cuisine you're craving. Burgers, ramen, pizza, BBQ, Pakistani classics —
+            mashed into one menu.
+          </p>
+          <a
+            href="/menu"
+            data-cursor-hover
+            className="hidden sm:inline-block bg-chili text-paper rounded-full px-6 py-3 text-sm font-medium"
+          >
+            Explore the menu
+          </a>
+        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/mascot/thumbs-up.png"
+          alt=""
+          className="w-40 sm:w-64 shrink-0"
+          style={{ animation: "float 5s ease-in-out infinite", filter: "drop-shadow(0 16px 20px rgba(0,0,0,0.15))" }}
+        />
+      </div>
 
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-8 gap-3 sm:gap-4">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-8 gap-3 sm:gap-4 mt-10 sm:mt-14">
         {CATEGORIES.map((cat, i) => (
           <a
             key={cat.slug}
             href={`/menu?category=${cat.slug}`}
-            className="flex flex-col items-center gap-2 text-center"
+            className="flex flex-col items-center gap-2 text-center bg-white/50 hover:bg-white rounded-2xl p-3 transition-colors"
             data-cursor-hover
           >
             <div style={{ animation: `float 4.5s ease-in-out ${(i % 4) * 0.35}s infinite` }}>
@@ -110,9 +140,9 @@ export default function Home() {
         ))}
       </div>
 
-      {/* TODO: signature dish spotlight, story strip — see
-          01-project-study.md §2/§4 layout concept. The richer spotlight +
-          browsing experience now lives on /menu itself (wheel + hero). */}
+      {/* TODO: story strip / about section — see 01-project-study.md §2/§4.
+          The richer spotlight + browsing experience lives on /menu itself
+          (wheel + hero + mascot pointing at the panel). */}
     </main>
   );
 }

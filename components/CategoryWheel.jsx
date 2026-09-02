@@ -57,13 +57,16 @@ export default function CategoryWheel({ categories, activeIndex, onActiveChange 
       // Tuned to feel subtle rather than arcade-like — see the brief's
       // "don't make the 3D effect cheesy" note.
       const normalizedDist = Math.min(distance / 90, 1);
-      const scale = 1 - normalizedDist * 0.28;
+      const scale = 1 - normalizedDist * 0.3;
       const opacity = 1 - normalizedDist * 0.75;
       const blur = normalizedDist * 3.5;
+      const isActive = distance < angleStep / 2;
 
       el.style.transform = `rotateX(${-itemAngle}deg) translateZ(${radius}px) scale(${scale})`;
       el.style.opacity = opacity;
       el.style.filter = blur > 0.3 ? `blur(${blur}px)` : "none";
+      const label = el.querySelector("[data-wheel-label]");
+      if (label) label.style.color = isActive ? "var(--chili, #FF4B2B)" : "var(--char, #26201B)";
     });
 
     if (closestIndex !== activeIndexRef.current) {
@@ -143,10 +146,21 @@ export default function CategoryWheel({ categories, activeIndex, onActiveChange 
       className="relative h-full w-full overflow-hidden select-none"
       style={{ perspective: "1000px", perspectiveOrigin: "50% 50%" }}
     >
-      {/* Focus-zone indicator — whichever item sits inside this band is active */}
+      {/* Focus-zone: a soft highlighted pill behind the active category,
+          rather than plain lines — reads more like "this is the selected
+          one" and less like a technical crosshair. */}
       <div
-        className="absolute left-[4%] w-[92%] pointer-events-none z-10 border-y-2 border-char/60"
-        style={{ top: "50%", height: 80, transform: "translateY(-50%)" }}
+        className="absolute left-[2%] w-[96%] pointer-events-none z-10 rounded-2xl bg-white border border-chili/30"
+        style={{ top: "50%", height: 80, transform: "translateY(-50%)", boxShadow: "0 4px 16px rgba(0,0,0,0.06)" }}
+      />
+      {/* Top/bottom edge fade — items ease out of view instead of clipping abruptly */}
+      <div
+        className="absolute inset-x-0 top-0 h-16 pointer-events-none z-20"
+        style={{ background: "linear-gradient(to bottom, var(--paper, #F1ECE1), transparent)" }}
+      />
+      <div
+        className="absolute inset-x-0 bottom-0 h-16 pointer-events-none z-20"
+        style={{ background: "linear-gradient(to top, var(--paper, #F1ECE1), transparent)" }}
       />
       <div
         ref={cylinderRef}
@@ -164,7 +178,9 @@ export default function CategoryWheel({ categories, activeIndex, onActiveChange 
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={cat.icon} alt="" className="w-9 h-9 sm:w-10 sm:h-10 object-contain" draggable={false} />
-            <span className="text-[11px] sm:text-xs font-medium text-char whitespace-nowrap">{cat.name}</span>
+            <span data-wheel-label className="text-[11px] sm:text-xs font-semibold whitespace-nowrap transition-colors duration-150">
+              {cat.name}
+            </span>
           </button>
         ))}
       </div>

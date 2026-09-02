@@ -29,7 +29,7 @@ export default function LoginPage() {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, phone, default_address")
       .eq("id", authData.user.id)
       .single();
 
@@ -40,12 +40,33 @@ export default function LoginPage() {
 
     if (profile.role === "admin") router.push("/admin");
     else if (profile.role === "rider") router.push("/rider");
-    else router.push("/");
+    else if (!profile.phone || !profile.default_address) {
+      // First login with an incomplete profile — ask for contact/address
+      // once, rather than making them hunt for a settings page later.
+      router.push("/account/profile?onboarding=true");
+    } else router.push("/");
+  }
+
+  async function handleForgotPassword() {
+    if (!email) {
+      setError("Enter your email above first, then click 'Forgot password?'");
+      return;
+    }
+    setError("");
+    const supabase = createClient();
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (resetError) setError(resetError.message);
+    else setError("Password reset link sent — check your email.");
   }
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-paper px-6">
       <form onSubmit={handleSubmit} className="w-full max-w-sm">
+        <a href="/" className="block mb-6 text-sm text-smoke" data-cursor-hover>
+          ← Back to MASH
+        </a>
         <h1 className="font-display text-3xl text-char mb-6">MASH</h1>
         <input
           type="email"
@@ -66,6 +87,13 @@ export default function LoginPage() {
         {error && <p className="text-chili text-sm mb-3">{error}</p>}
         <button type="submit" className="w-full bg-chili text-paper rounded-full py-2 font-medium">
           Log in
+        </button>
+        <button
+          type="button"
+          onClick={handleForgotPassword}
+          className="text-xs text-smoke text-center mt-3 block mx-auto"
+        >
+          Forgot password?
         </button>
         <p className="text-sm text-smoke text-center mt-4">
           Don't have an account?{" "}

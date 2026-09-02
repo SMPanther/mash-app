@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabaseClient";
+import SiteHeader from "@/components/SiteHeader";
 
 // Every coupon here is tied to this one logged-in customer (RLS enforces
 // that server-side too) — see 07-phase2-features.md §6.
@@ -28,7 +29,9 @@ export default function MyCoupons() {
   }
 
   return (
-    <main className="px-[6vw] sm:px-[8vw] py-10 sm:py-[8vh]">
+    <>
+      <SiteHeader />
+      <main className="px-[6vw] sm:px-[8vw] py-10 sm:py-[8vh]">
       <h1 className="font-display text-3xl text-char mb-6">Your coupons</h1>
       <div className="space-y-3">
         {coupons.length === 0 && <p className="text-smoke">No coupons yet.</p>}
@@ -61,6 +64,7 @@ export default function MyCoupons() {
           );
         })}
       </div>
-    </main>
+      </main>
+    </>
   );
 }

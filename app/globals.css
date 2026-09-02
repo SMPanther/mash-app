@@ -17,6 +17,28 @@ body {
   color: var(--char);
 }
 
+/* Hide the system cursor on devices with a real mouse — handled here in
+   CSS rather than by CustomCursor.jsx setting el.style.cursor on every
+   matching element via querySelectorAll. That approach mutated other
+   components' DOM nodes outside React's own render, which (a) caused a
+   hydration-mismatch warning the moment React re-rendered one of those
+   elements and diffed against its own idea of the style attribute, and
+   (b) silently never applied to anything added after CustomCursor's
+   mount (the category wheel's buttons, dynamically-loaded menu cards).
+   A static CSS rule has neither problem — it's just always there. */
+@media (hover: hover) and (pointer: fine) {
+  body, a, button, [data-cursor-hover] {
+    cursor: none;
+  }
+}
+
+/* Subtle hover response for the custom cursor chips — see CustomCursor.jsx,
+   which toggles this class via event delegation rather than per-element
+   listeners. */
+body.cursor-hover .cursor-chip {
+  transform: scale(1.15);
+}
+
 /* Subtle floating motion for menu/hero imagery — see components/MenuItemsPanel.jsx
    and HeroSpotlight.jsx. Kept gentle (8px, slow) per the "premium not
    cheesy" note in the wheel brief; respects reduced-motion below. */

@@ -28,6 +28,10 @@ export default function Loader() {
 
     let start = null;
     let raf;
+    function finish() {
+      setDone(true);
+      sessionStorage.setItem("mash-loaded", "1");
+    }
     function tick(ts) {
       if (!start) start = ts;
       const progress = Math.min(100, ((ts - start) / 1300) * 100);
@@ -35,14 +39,23 @@ export default function Loader() {
       if (progress < 100) {
         raf = requestAnimationFrame(tick);
       } else {
-        setTimeout(() => {
-          setDone(true);
-          sessionStorage.setItem("mash-loaded", "1");
-        }, 200);
+        setTimeout(finish, 200);
       }
     }
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+
+    // Failsafe: requestAnimationFrame pauses while a tab/app is
+    // backgrounded (common on mobile — switching apps mid-load, or the
+    // browser throttling an inactive tab), which could otherwise leave
+    // the loader stuck indefinitely since `tick` never gets to run again
+    // until the tab is foregrounded. This guarantees it never blocks
+    // longer than ~4s regardless of what requestAnimationFrame does.
+    const failsafe = setTimeout(finish, 4000);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(failsafe);
+    };
   }, []);
 
   if (skip) return null;

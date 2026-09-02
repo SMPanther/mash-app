@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabaseClient";
 import { STATUS_LABELS } from "@/lib/orderStatus";
+import SiteHeader from "@/components/SiteHeader";
 
 const CATEGORIES = [
   { value: "late_delivery", label: "It arrived late" },
@@ -54,13 +55,15 @@ export default function OrderHistory() {
   }
 
   return (
-    <main className="px-[6vw] sm:px-[8vw] py-10 sm:py-[8vh]">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-3xl text-char">Order history</h1>
-        <a href="/account/coupons" className="text-sm text-chili">
-          My coupons
-        </a>
-      </div>
+    <>
+      <SiteHeader />
+      <main className="px-[6vw] sm:px-[8vw] py-10 sm:py-[8vh]">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="font-display text-3xl text-char">Order history</h1>
+          <a href="/account/coupons" className="text-sm text-chili">
+            My coupons
+          </a>
+        </div>
       <div className="space-y-3">
         {orders.length === 0 && <p className="text-smoke">No past orders yet.</p>}
         {orders.map((order) => (
@@ -123,6 +126,7 @@ export default function OrderHistory() {
           </div>
         ))}
       </div>
-    </main>
+      </main>
+    </>
   );
 }

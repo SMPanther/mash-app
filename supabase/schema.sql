@@ -107,6 +107,21 @@ create table complaints (
   created_at timestamptz default now()
 );
 
+-- Split into two triggers on purpose. A single BEFORE trigger that both
+-- sets updated_at AND inserts into order_status_history is what caused a
+-- live bug: order_status_history.order_id has a foreign key to orders.id,
+-- but inside a BEFORE INSERT trigger the new orders row hasn't actually
+-- been written yet — so that insert failed with a foreign-key violation
+-- on every single checkout. updated_at has to be set BEFORE the row is
+-- written; the history log has to happen AFTER, once the row is real.
+create or replace function set_order_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
 create or replace function log_order_status_change()
 returns trigger as $$
 begin
@@ -114,13 +129,16 @@ begin
     insert into order_status_history (order_id, status, changed_by)
     values (new.id, new.status, auth.uid());
   end if;
-  new.updated_at = now();
   return new;
 end;
 $$ language plpgsql;
 
-create trigger trg_order_status
+create trigger trg_order_set_updated_at
   before insert or update on orders
+  for each row execute function set_order_updated_at();
+
+create trigger trg_order_status_history
+  after insert or update on orders
   for each row execute function log_order_status_change();
 
 alter table orders enable row level security;
@@ -340,3 +358,6 @@ $$ language plpgsql security definer set search_path = public;
 -- since "exactly one, except zero during setup" isn't a clean check
 -- constraint to write.
 alter table menu_items add column if not exists featured boolean default false;
+
+-- Saved address for checkout convenience + onboarding (Phase 3 cont'd).
+alter table profiles add column if not exists default_address text;

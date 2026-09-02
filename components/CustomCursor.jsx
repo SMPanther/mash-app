@@ -63,15 +63,29 @@ export default function CustomCursor() {
     }
     raf = requestAnimationFrame(loop);
 
-    document.body.style.cursor = "none";
-    document.querySelectorAll("a, button, [data-cursor-hover]").forEach((el) => {
-      el.style.cursor = "none";
-    });
+    // Event delegation on document, not per-element listeners — this is
+    // what makes hover state work on elements that don't exist yet at
+    // mount time (the category wheel's buttons, menu cards that load
+    // after a Supabase fetch). A querySelectorAll-at-mount approach can
+    // only ever see what's already in the DOM the moment it runs.
+    function onOver(e) {
+      if (e.target.closest("a, button, [data-cursor-hover]")) {
+        document.body.classList.add("cursor-hover");
+      }
+    }
+    function onOut(e) {
+      if (e.target.closest("a, button, [data-cursor-hover]")) {
+        document.body.classList.remove("cursor-hover");
+      }
+    }
+    document.addEventListener("mouseover", onOver);
+    document.addEventListener("mouseout", onOut);
 
     return () => {
       window.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseover", onOver);
+      document.removeEventListener("mouseout", onOut);
       cancelAnimationFrame(raf);
-      document.body.style.cursor = "";
     };
   }, []);
 
@@ -84,7 +98,7 @@ export default function CustomCursor() {
         <div
           key={i}
           ref={(el) => (chipRefs.current[i] = el)}
-          className="fixed top-0 left-0 rounded-full bg-paper shadow-md overflow-hidden"
+          className="fixed top-0 left-0 rounded-full bg-paper shadow-md overflow-hidden cursor-chip transition-transform duration-150"
           style={{ width: chip.size, height: chip.size }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}

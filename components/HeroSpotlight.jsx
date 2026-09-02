@@ -23,13 +23,22 @@ export default function HeroSpotlight({ item }) {
         {item.description && <p className="text-smoke text-sm max-w-sm mb-4">{item.description}</p>}
         <div className="flex items-center justify-center sm:justify-start gap-4">
           <span className="font-medium text-char text-lg">Rs. {item.price}</span>
-          <button
-            onClick={() => addItem({ menuItemId: item.id, variationId: null, name: item.name, price: item.price })}
-            data-cursor-hover
-            className="bg-chili text-paper rounded-full px-5 py-2.5 text-sm font-medium"
-          >
-            Order now
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => addItem({ menuItemId: item.id, variationId: null, name: item.name, price: item.price })}
+              data-cursor-hover
+              className="bg-chili text-paper rounded-full px-5 py-2.5 text-sm font-medium"
+            >
+              Order now
+            </button>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/assets/mascot/point-down.png"
+              alt=""
+              aria-hidden="true"
+              className="hidden lg:block absolute -right-24 -top-16 w-24 pointer-events-none"
+            />
+          </div>
         </div>
       </div>
 

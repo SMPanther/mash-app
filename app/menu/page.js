@@ -7,6 +7,7 @@ import { CATEGORIES } from "@/lib/categories";
 import CategoryWheel from "@/components/CategoryWheel";
 import MenuItemsPanel from "@/components/MenuItemsPanel";
 import HeroSpotlight from "@/components/HeroSpotlight";
+import SiteHeader from "@/components/SiteHeader";
 
 const PANEL_HEIGHT = "h-[520px] sm:h-[560px]";
 
@@ -81,8 +82,10 @@ function MenuPageInner() {
     : null;
 
   return (
-    <main className="px-[6vw] sm:px-[8vw] py-8 sm:py-[6vh]">
-      <HeroSpotlight item={featuredWithIcon} />
+    <>
+      <SiteHeader />
+      <main className="px-[6vw] sm:px-[8vw] py-8 sm:py-[6vh]">
+        <HeroSpotlight item={featuredWithIcon} />
 
       {/* Desktop / tablet: wheel + independently-scrolling panel side by side */}
       <div className="hidden md:flex gap-6 lg:gap-10">
@@ -93,6 +96,16 @@ function MenuPageInner() {
           <h1 className="font-display text-2xl lg:text-3xl text-char mb-4">{activeCategory.name}</h1>
           <MenuItemsPanel category={activeCategory.slug} items={activeItems} heightClass={PANEL_HEIGHT} />
         </div>
+        {/* Mascot — decorative, hidden on smaller desktop widths so it never
+            crowds the actual ordering panel */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/mascot/pointing.png"
+          alt=""
+          aria-hidden="true"
+          className="hidden xl:block w-56 shrink-0 self-end mb-8"
+          style={{ animation: "float 5s ease-in-out infinite" }}
+        />
       </div>
 
       {/* Mobile: horizontal pill tabs, then a normal-flow list (page scrolls) */}
@@ -122,7 +135,8 @@ function MenuPageInner() {
           No menu data yet — run <code>supabase/seed.sql</code> to add some test dishes.
         </p>
       )}
-    </main>
+      </main>
+    </>
   );
 }
 

@@ -59,17 +59,20 @@ function ItemCard({ item, index }) {
       )}
 
       {variations.length > 0 && (
-        <select
-          value={selectedVariation?.id || ""}
-          onChange={(e) => setSelectedVariation(variations.find((v) => v.id === e.target.value))}
-          className="mt-2 text-xs border border-smoke/30 rounded-md px-2 py-1 bg-white"
-        >
-          {variations.map((v) => (
-            <option key={v.id} value={v.id}>
-              {v.name} — Rs. {v.price}
-            </option>
-          ))}
-        </select>
+        <div className="relative mt-2 w-full">
+          <select
+            value={selectedVariation?.id || ""}
+            onChange={(e) => setSelectedVariation(variations.find((v) => v.id === e.target.value))}
+            className="w-full appearance-none text-sm font-medium border border-smoke/25 rounded-full pl-3 pr-8 py-1.5 bg-white text-char"
+          >
+            {variations.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.name} — Rs. {v.price}
+              </option>
+            ))}
+          </select>
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-smoke text-xs">▾</span>
+        </div>
       )}
 
       <div className="flex items-center justify-between w-full mt-3">
