@@ -26,7 +26,13 @@ begin
   end if;
   return new;
 end;
-$$ language plpgsql;
+$$ language plpgsql security definer set search_path = public;
+-- security definer is the critical part here — without it, this trigger
+-- runs as whoever triggered the update (e.g. an admin's own login), and
+-- since order_status_history has RLS enabled with only a SELECT policy
+-- (no INSERT policy for anyone), every single status change failed with
+-- "new row violates row-level security policy for table
+-- order_status_history". This one line fixes that.
 
 drop trigger if exists trg_order_set_updated_at on orders;
 create trigger trg_order_set_updated_at

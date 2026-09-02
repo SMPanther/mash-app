@@ -42,8 +42,14 @@ export default function CustomCursor() {
 
     let raf;
     function loop() {
-      nodes[0].x += (mouseX - nodes[0].x) * EASE;
-      nodes[0].y += (mouseY - nodes[0].y) * EASE;
+      // The leading node tracks the mouse EXACTLY, no easing — with the
+      // system cursor hidden, this is the only thing telling you where a
+      // click will actually land. Only the trailing chips lag behind it;
+      // easing the leading one too (as before) meant there was never a
+      // precise indicator anywhere, which made clicking small targets
+      // (dropdowns, buttons) feel imprecise.
+      nodes[0].x = mouseX;
+      nodes[0].y = mouseY;
       for (let i = 1; i < nodes.length; i++) {
         nodes[i].x += (nodes[i - 1].x - nodes[i].x) * EASE;
         nodes[i].y += (nodes[i - 1].y - nodes[i].y) * EASE;

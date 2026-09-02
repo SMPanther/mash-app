@@ -131,7 +131,7 @@ begin
   end if;
   return new;
 end;
-$$ language plpgsql;
+$$ language plpgsql security definer set search_path = public;
 
 create trigger trg_order_set_updated_at
   before insert or update on orders
