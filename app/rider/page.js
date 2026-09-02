@@ -20,6 +20,8 @@ export default function RiderDashboard() {
 
   const orders = useRealtimeOrders({ riderId });
   const assigned = orders.filter((o) => o.status === "out_for_delivery");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
   // Location tracking only runs while there's an active delivery — starts
   // when one appears, stops when there are none, not continuously in the
@@ -49,8 +51,15 @@ export default function RiderDashboard() {
   }, [riderId, assigned.length]);
 
   async function markDelivered(orderId) {
+    setError("");
+    setBusy(true);
     const supabase = createClient();
-    await supabase.from("orders").update({ status: "delivered" }).eq("id", orderId);
+    const { error: updateError } = await supabase.from("orders").update({ status: "delivered" }).eq("id", orderId);
+    setBusy(false);
+    if (updateError) {
+      setError(updateError.message);
+      console.error("Failed to mark delivered:", updateError);
+    }
   }
 
   return (
@@ -66,6 +75,7 @@ export default function RiderDashboard() {
       {assigned.length > 0 && (
         <p className="text-xs text-smoke mb-4">📍 Sharing your location while you have an active delivery.</p>
       )}
+      {error && <p className="text-sm text-chili mb-4">{error}</p>}
       <div className="space-y-3">
         {assigned.length === 0 && (
           <div className="text-center py-16 border border-dashed border-smoke/25 rounded-xl">
@@ -79,9 +89,10 @@ export default function RiderDashboard() {
             actions={
               <button
                 onClick={() => markDelivered(order.id)}
-                className="text-sm px-3 py-1.5 rounded-full bg-chili text-paper"
+                disabled={busy}
+                className="text-sm px-3 py-1.5 rounded-full bg-chili text-paper disabled:opacity-50"
               >
-                Mark delivered
+                {busy ? "…" : "Mark delivered"}
               </button>
             }
           />

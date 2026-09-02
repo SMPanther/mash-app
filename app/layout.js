@@ -1,6 +1,7 @@
 import "./globals.css";
 import Loader from "@/components/Loader";
 import CustomCursor from "@/components/CustomCursor";
+import PinnedOrderTracker from "@/components/PinnedOrderTracker";
 import { CartProvider } from "@/lib/CartContext";
 
 export const metadata = {
@@ -16,6 +17,7 @@ export default function RootLayout({ children }) {
           <Loader />
           <CustomCursor />
           {children}
+          <PinnedOrderTracker />
         </CartProvider>
       </body>
     </html>

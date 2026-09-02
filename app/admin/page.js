@@ -19,6 +19,8 @@ export default function AdminOrderBoard() {
   const [seenIds, setSeenIds] = useState(new Set());
   const [riders, setRiders] = useState([]);
   const [pendingRider, setPendingRider] = useState({}); // orderId -> riderId being selected
+  const [errors, setErrors] = useState({}); // orderId -> error message
+  const [busy, setBusy] = useState({}); // orderId -> bool, while an update is in flight
 
   useEffect(() => {
     const supabase = createClient();
@@ -26,7 +28,10 @@ export default function AdminOrderBoard() {
       .from("profiles")
       .select("id, name")
       .eq("role", "rider")
-      .then(({ data }) => setRiders(data || []));
+      .then(({ data, error }) => {
+        if (error) console.error("Failed to load riders:", error.message);
+        setRiders(data || []);
+      });
   }, []);
 
   const activeOrders = useMemo(() => orders.filter((o) => isActive(o.status)), [orders]);
@@ -40,8 +45,18 @@ export default function AdminOrderBoard() {
   }
 
   async function setStatus(orderId, status, extra = {}) {
+    setErrors((e) => ({ ...e, [orderId]: "" }));
+    setBusy((b) => ({ ...b, [orderId]: true }));
     const supabase = createClient();
-    await supabase.from("orders").update({ status, ...extra }).eq("id", orderId);
+    const { error } = await supabase.from("orders").update({ status, ...extra }).eq("id", orderId);
+    setBusy((b) => ({ ...b, [orderId]: false }));
+    if (error) {
+      // This used to fail completely silently — the button would just
+      // appear to do nothing, with no way to tell whether it was blocked
+      // by a permissions issue, a network problem, or something else.
+      setErrors((e) => ({ ...e, [orderId]: error.message }));
+      console.error("Failed to update order status:", error);
+    }
   }
 
   return (
@@ -58,57 +73,66 @@ export default function AdminOrderBoard() {
           </div>
         )}
         {activeOrders.map((order) => (
-          <OrderCard
-            key={order.id}
-            order={order}
-            actions={
-              <>
-                {order.status === "received" && (
-                  <button
-                    onClick={() => setStatus(order.id, "preparing")}
-                    className="text-sm px-3 py-1.5 rounded-full bg-ember text-paper"
-                  >
-                    Preparing
-                  </button>
-                )}
-                {order.status === "preparing" && (
-                  <div className="flex items-center gap-2">
-                    <select
-                      className="text-sm border border-smoke/30 rounded-full px-2 py-1.5 bg-white"
-                      value={pendingRider[order.id] || ""}
-                      onChange={(e) =>
-                        setPendingRider((p) => ({ ...p, [order.id]: e.target.value }))
-                      }
-                    >
-                      <option value="" disabled>
-                        Assign rider…
-                      </option>
-                      {riders.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.name || r.id.slice(0, 6)}
-                        </option>
-                      ))}
-                    </select>
+          <div key={order.id}>
+            <OrderCard
+              order={order}
+              actions={
+                <>
+                  {order.status === "received" && (
                     <button
-                      disabled={!pendingRider[order.id]}
-                      onClick={() =>
-                        setStatus(order.id, "out_for_delivery", { rider_id: pendingRider[order.id] })
-                      }
-                      className="text-sm px-3 py-1.5 rounded-full bg-chili text-paper disabled:opacity-40"
+                      onClick={() => setStatus(order.id, "preparing")}
+                      disabled={busy[order.id]}
+                      className="text-sm px-3 py-1.5 rounded-full bg-ember text-paper disabled:opacity-50"
                     >
-                      Send out
+                      {busy[order.id] ? "…" : "Preparing"}
                     </button>
-                  </div>
-                )}
-                <a
-                  href={`/admin/orders/${order.id}`}
-                  className="text-sm px-3 py-1.5 rounded-full border border-smoke/30 text-char"
-                >
-                  Details
-                </a>
-              </>
-            }
-          />
+                  )}
+                  {order.status === "preparing" && (
+                    <div className="flex items-center gap-2">
+                      <select
+                        className="text-sm border border-smoke/30 rounded-full px-2 py-1.5 bg-white"
+                        value={pendingRider[order.id] || ""}
+                        onChange={(e) =>
+                          setPendingRider((p) => ({ ...p, [order.id]: e.target.value }))
+                        }
+                      >
+                        <option value="" disabled>
+                          {riders.length === 0 ? "No riders yet" : "Assign rider…"}
+                        </option>
+                        {riders.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.name || r.id.slice(0, 6)}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        disabled={!pendingRider[order.id] || busy[order.id]}
+                        onClick={() =>
+                          setStatus(order.id, "out_for_delivery", { rider_id: pendingRider[order.id] })
+                        }
+                        className="text-sm px-3 py-1.5 rounded-full bg-chili text-paper disabled:opacity-40"
+                      >
+                        {busy[order.id] ? "…" : "Send out"}
+                      </button>
+                    </div>
+                  )}
+                  <a
+                    href={`/admin/orders/${order.id}`}
+                    className="text-sm px-3 py-1.5 rounded-full border border-smoke/30 text-char"
+                  >
+                    Details
+                  </a>
+                </>
+              }
+            />
+            {order.status === "preparing" && riders.length === 0 && (
+              <p className="text-xs text-smoke mt-1 ml-1">
+                No rider accounts exist yet — create one via Supabase Auth, then set its role to
+                'rider' in the profiles table.
+              </p>
+            )}
+            {errors[order.id] && <p className="text-xs text-chili mt-1 ml-1">{errors[order.id]}</p>}
+          </div>
         ))}
       </div>
     </div>
