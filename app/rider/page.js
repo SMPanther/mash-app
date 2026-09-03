@@ -12,11 +12,35 @@ import OrderCard from "@/components/OrderCard";
 // out_for_delivery).
 export default function RiderDashboard() {
   const [riderId, setRiderId] = useState(null);
+  const [isAvailable, setIsAvailable] = useState(true);
+  const [toggling, setToggling] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setRiderId(data.user?.id));
+    supabase.auth.getUser().then(async ({ data }) => {
+      setRiderId(data.user?.id);
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("is_available")
+          .eq("id", data.user.id)
+          .single();
+        setIsAvailable(profile?.is_available ?? true);
+      }
+    });
   }, []);
+
+  async function toggleAvailability() {
+    setToggling(true);
+    const next = !isAvailable;
+    const res = await fetch("/api/update-availability", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isAvailable: next }),
+    });
+    if (res.ok) setIsAvailable(next);
+    setToggling(false);
+  }
 
   const orders = useRealtimeOrders({ riderId });
   const assigned = orders.filter((o) => o.status === "out_for_delivery");
@@ -66,11 +90,23 @@ export default function RiderDashboard() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-medium text-char">Your deliveries</h1>
-        {assigned.length > 0 && (
-          <span className="text-xs bg-chili/10 text-chili px-2.5 py-1 rounded-full font-medium">
-            {assigned.length} active
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          {assigned.length > 0 && (
+            <span className="text-xs bg-chili/10 text-chili px-2.5 py-1 rounded-full font-medium">
+              {assigned.length} active
+            </span>
+          )}
+          <button
+            onClick={toggleAvailability}
+            disabled={toggling}
+            data-cursor-hover
+            className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
+              isAvailable ? "bg-lime/20 text-char" : "bg-smoke/15 text-smoke"
+            }`}
+          >
+            {isAvailable ? "🟢 Available" : "⚪ Off shift"}
+          </button>
+        </div>
       </div>
       {assigned.length > 0 && (
         <p className="text-xs text-smoke mb-4">📍 Sharing your location while you have an active delivery.</p>

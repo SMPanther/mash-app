@@ -1,10 +1,21 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { useRealtimeOrders } from "@/lib/useRealtimeOrders";
 import OrderStatusStepper from "@/components/OrderStatusStepper";
-import DeliveryMap from "@/components/DeliveryMap";
 import SiteHeader from "@/components/SiteHeader";
+
+// Leaflet touches `window` at module load time, which crashes during
+// Next.js's server-side render pass (window doesn't exist there) even
+// though this is a "use client" component — client components still get
+// pre-rendered on the server for the initial HTML. `ssr: false` skips
+// that pre-render for this component specifically, so it only ever
+// mounts in the browser, after window genuinely exists.
+const DeliveryMap = dynamic(() => import("@/components/DeliveryMap"), {
+  ssr: false,
+  loading: () => <div className="text-sm text-smoke py-4">Loading map…</div>,
+});
 
 // The live view a customer lands on right after checkout. Subscribed to
 // just this one order — when the admin or rider changes its status, this

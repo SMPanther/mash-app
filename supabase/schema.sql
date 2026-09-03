@@ -361,3 +361,12 @@ alter table menu_items add column if not exists featured boolean default false;
 
 -- Saved address for checkout convenience + onboarding (Phase 3 cont'd).
 alter table profiles add column if not exists default_address text;
+
+-- ============================================================
+-- Phase 4: rider availability
+-- ============================================================
+-- Without this, every rider account shows in admin's assign-rider
+-- dropdown regardless of whether they're actually on shift — a real gap
+-- once there's more than one or two riders. Riders toggle this
+-- themselves from their own dashboard.
+alter table profiles add column if not exists is_available boolean default true;

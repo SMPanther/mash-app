@@ -61,3 +61,6 @@ $$ language plpgsql security definer set search_path = public;
 
 -- 3. Hero spotlight flag on menu_items.
 alter table menu_items add column if not exists featured boolean default false;
+
+-- 4. Rider availability toggle (Phase 4).
+alter table profiles add column if not exists is_available boolean default true;

@@ -43,7 +43,13 @@ export default function DeliveryMap({ riderId }) {
   }, [riderId]);
 
   if (!position) {
-    return <div className="text-sm text-smoke py-4">Waiting for your rider's location…</div>;
+    return (
+      <div className="text-sm text-smoke py-4 border border-dashed border-smoke/25 rounded-lg px-4">
+        📍 No location yet — this shows up once your rider's phone has granted location access and
+        opened their delivery. If this doesn't update within a few minutes, they may not have location
+        sharing turned on for their browser.
+      </div>
+    );
   }
 
   return (

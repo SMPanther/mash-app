@@ -28,6 +28,7 @@ export default function AdminOrderBoard() {
       .from("profiles")
       .select("id, name")
       .eq("role", "rider")
+      .eq("is_available", true)
       .then(({ data, error }) => {
         if (error) console.error("Failed to load riders:", error.message);
         setRiders(data || []);
@@ -97,7 +98,7 @@ export default function AdminOrderBoard() {
                         }
                       >
                         <option value="" disabled>
-                          {riders.length === 0 ? "No riders yet" : "Assign rider…"}
+                          {riders.length === 0 ? "No riders available" : "Assign rider…"}
                         </option>
                         {riders.map((r) => (
                           <option key={r.id} value={r.id}>
@@ -127,8 +128,8 @@ export default function AdminOrderBoard() {
             />
             {order.status === "preparing" && riders.length === 0 && (
               <p className="text-xs text-smoke mt-1 ml-1">
-                No rider accounts exist yet — create one via Supabase Auth, then set its role to
-                'rider' in the profiles table.
+                No riders currently marked available — either none exist yet (create one via Supabase
+                Auth, then set its role to 'rider'), or they've all toggled themselves off shift.
               </p>
             )}
             {errors[order.id] && <p className="text-xs text-chili mt-1 ml-1">{errors[order.id]}</p>}

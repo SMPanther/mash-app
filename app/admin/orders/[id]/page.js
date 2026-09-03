@@ -2,8 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabaseClient";
 import OrderStatusStepper from "@/components/OrderStatusStepper";
+
+const DeliveryMap = dynamic(() => import("@/components/DeliveryMap"), {
+  ssr: false,
+  loading: () => <div className="text-sm text-smoke py-4">Loading map…</div>,
+});
 
 export default function AdminOrderDetail() {
   const { id } = useParams();
@@ -64,6 +70,13 @@ export default function AdminOrderDetail() {
       <p className="text-smoke mb-6">{order.address}</p>
 
       <OrderStatusStepper status={order.status} />
+
+      {order.status === "out_for_delivery" && order.rider_id && (
+        <div className="mt-6">
+          <h2 className="text-sm font-medium text-char mb-2">Rider location</h2>
+          <DeliveryMap riderId={order.rider_id} />
+        </div>
+      )}
 
       <ul className="mt-8 divide-y divide-smoke/20 mb-6">
         {items.map((item) => (
